@@ -1,0 +1,154 @@
+---
+title: "Computational Musicology Portfolio"
+subtitle: "K-pop vs Cantopop (Current Available Features)"
+format:
+  dashboard:
+    orientation: columns
+    scrolling: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+
+normalize_names <- function(df) {
+  names(df) <- names(df) |>
+    tolower() |>
+    gsub("[^a-z0-9]+", "_", x = _) |>
+    gsub("^_|_$", "", x = _)
+  df
+}
+
+kpop <- read_csv("kpop_2020s.csv", show_col_types = FALSE) |> normalize_names() |> mutate(collection = "K-pop 2020s")
+cantopop <- read_csv("cantopop_2020s.csv", show_col_types = FALSE) |> normalize_names() |> mutate(collection = "Cantopop 2020s")
+
+tracks <- bind_rows(kpop, cantopop) |>
+  mutate(
+    release_date = as.Date(release_date),
+    duration_min = duration_ms / 60000
+  )
+
+numeric_features <- c("danceability", "energy", "valence", "tempo", "loudness", "acousticness", "speechiness", "liveness", "duration_min", "popularity")
+
+feature_long <- tracks |>
+  select(collection, all_of(numeric_features)) |>
+  pivot_longer(-collection, names_to = "feature", values_to = "value")
+
+top_artists <- tracks |>
+  count(collection, artist_name_s, sort = TRUE) |>
+  group_by(collection) |>
+  slice_head(n = 10) |>
+  ungroup()
+```
+
+## Overview
+
+### Key stats
+
+```{r}
+track_n <- nrow(tracks)
+artist_n <- tracks |> distinct(artist_name_s) |> nrow()
+avg_pop <- mean(tracks$popularity, na.rm = TRUE)
+
+valuebox(track_n, "Total tracks")
+valuebox(artist_n, "Unique artists")
+valuebox(number(avg_pop, accuracy = 0.1), "Average popularity")
+```
+
+### Tracks added over release years
+
+```{r}
+tracks |>
+  mutate(release_year = format(release_date, "%Y")) |>
+  count(collection, release_year) |>
+  ggplot(aes(x = release_year, y = n, fill = collection)) +
+  geom_col(position = "dodge") +
+  labs(x = "Release year", y = "Track count", fill = "Collection") +
+  theme_minimal()
+```
+
+## Genre Comparison
+
+### Feature distribution
+
+```{r}
+feature_long |>
+  filter(feature %in% c("danceability", "energy", "valence", "tempo")) |>
+  ggplot(aes(x = collection, y = value, fill = collection)) +
+  geom_boxplot(alpha = 0.8, outlier.alpha = 0.4) +
+  facet_wrap(~ feature, scales = "free_y") +
+  labs(x = "", y = "Value") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### Energy vs Valence
+
+```{r}
+tracks |>
+  ggplot(aes(x = energy, y = valence, color = collection)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(x = "Energy", y = "Valence", color = "Collection") +
+  theme_minimal()
+```
+
+### Loudness vs Acousticness
+
+```{r}
+tracks |>
+  ggplot(aes(x = acousticness, y = loudness, color = collection)) +
+  geom_point(alpha = 0.7, size = 2) +
+  labs(x = "Acousticness", y = "Loudness (dB)", color = "Collection") +
+  theme_minimal()
+```
+
+## Artists and Tracks
+
+### Top artists by track count
+
+```{r}
+top_artists |>
+  ggplot(aes(x = reorder(artist_name_s, n), y = n, fill = collection)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ collection, scales = "free_y") +
+  coord_flip() +
+  labs(x = "Artist", y = "Track count") +
+  theme_minimal()
+```
+
+### Track table (current data)
+
+```{r}
+tracks |>
+  select(collection, track_name, artist_name_s, release_date, popularity, danceability, energy, valence, tempo, loudness) |>
+  arrange(collection, desc(popularity)) |>
+  slice_head(n = 30) |>
+  knitr::kable()
+```
+
+## Placeholders for Future Features
+
+### Chroma / Pitch Features (to add later)
+
+::: {.callout-note}
+This section is intentionally a placeholder. Add chroma/pitch-level features when available, then include pitch class heatmaps and key-profile comparisons.
+:::
+
+### Timbre Features (to add later)
+
+::: {.callout-note}
+This section is intentionally a placeholder. Add timbre vectors (e.g., MFCC-based descriptors) and include clustering/PCA visualizations.
+:::
+
+### Section-Level Dynamics (to add later)
+
+::: {.callout-note}
+This section is intentionally a placeholder. Add section/segment-level data for temporal loudness and structural form analysis.
+:::
