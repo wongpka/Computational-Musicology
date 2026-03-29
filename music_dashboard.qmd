@@ -21,8 +21,8 @@ library(scales)
 normalize_names <- function(df) {
   names(df) <- names(df) |>
     tolower() |>
-    gsub("[^a-z0-9]+", "_", x = _) |>
-    gsub("^_|_$", "", x = _)
+    gsub("[^a-z0-9]+", "_", x = .) |>
+    gsub("^_|_$", "", x = .)
   df
 }
 
