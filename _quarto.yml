@@ -12,6 +12,6 @@ website:
     title: "Computational Musicology"
     right:
       - text: "Home"
-        href: music_dashboard.qmd
+        href: index.qmd
       - text: "Music Dashboard"
         href: music_dashboard.qmd
