@@ -4,6 +4,7 @@ format: html
 ---
 
 ```{=html}
+<link rel="canonical" href="music_dashboard.html">
 <meta http-equiv="refresh" content="0; url=music_dashboard.html">
-<p>Redirecting to the <a href="music_dashboard.html">music dashboard</a>…</p>
+<p>Click here if you are not automatically redirected to the <a href="music_dashboard.html">music dashboard</a>.</p>
 ```
